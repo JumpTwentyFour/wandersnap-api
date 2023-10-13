@@ -6,6 +6,8 @@ namespace App\Filament\Resources;
 
 use App\Domain\Locations\Models\Location;
 use App\Filament\Resources\LocationResource\Pages;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -34,6 +36,26 @@ class LocationResource extends Resource
                     ->inputMode('decimal')->required(),
                 TextInput::make('longitude')->numeric()
                     ->inputMode('decimal')->required(),
+                Repeater::make('images')
+                    ->relationship()
+                    ->simple(
+                        FileUpload::make('path')
+                            ->disk(config()->get('filament.location_images_filesystem'))
+                            ->validationAttribute('image')
+                            ->preserveFilenames()
+                            ->visibility('private')
+                            ->imageResizeMode('cover')
+                            ->imageCropAspectRatio('16:9')
+                            ->imageResizeTargetWidth('1920')
+                            ->imageResizeTargetHeight('1080')
+                            ->required(),
+                    )
+                    ->defaultItems(0)
+                    ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
+                        $data['name'] = basename($data['path']);
+                 
+                        return $data;
+                    }),
             ]);
     }
 
