@@ -13,6 +13,7 @@ RUN apt-get clean && apt-get update --fix-missing && apt-get upgrade --yes && ap
     libonig-dev \
     libpng-dev \
     libjpeg-dev \
+    libwebp-dev \
     libssl-dev \
     libxml2-dev \
     libzip-dev \
@@ -21,7 +22,7 @@ RUN apt-get clean && apt-get update --fix-missing && apt-get upgrade --yes && ap
     wget \
     zip
 
-RUN docker-php-ext-configure gd --with-jpeg=/usr/include
+RUN docker-php-ext-configure gd --with-jpeg=/usr/include --with-webp
 
 # PHP Extensions
 # (ctype, fileinfo, json, mbstring, openssl, tokenizer and xml are already enabled)

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Trips\Models;
 
+use App\Domain\Images\Actions\ResizeImageAction;
 use App\Domain\Locations\Models\Location;
 use App\Domain\Trips\Collections\TripCollection;
 use App\Models\User;
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
+use function Illuminate\Events\queueable;
 
 class Trip extends Model
 {
@@ -34,6 +37,31 @@ class Trip extends Model
         'start_date' => 'datetime',
         'end_date' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::created(queueable(function (self $trip) {
+            if (!$trip->cover_photo) {
+                return;
+            }
+
+            app(ResizeImageAction::class)->execute(
+                $trip->cover_photo,
+                config('filament.trip_cover_images_filesystem')
+            );
+        }));
+
+        static::updated(queueable(function (self $trip) {
+            if (!array_key_exists('cover_photo', $trip->getChanges())) {
+                return;
+            }
+
+            app(ResizeImageAction::class)->execute(
+                $trip->cover_photo,
+                config('filament.trip_cover_images_filesystem')
+            );
+        }));
+    }
 
     /**
      * @phpstan-return BelongsTo<\App\Models\User, \App\Domain\Trips\Models\Trip>
